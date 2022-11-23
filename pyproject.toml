@@ -1,0 +1,61 @@
+[tool.poetry]
+name = "jive-api-client"
+version = "0.1.0"
+description = "api client for interfacing with goto and jive"
+authors = ["Atom Boolean <ana@peerlogic.com>"]
+readme = "README.md"
+packages = [{include = "jive_api_client"}]
+
+[tool.poetry.dependencies]
+python = "^3.7.9"
+argon2-cffi = "16.1.0"
+boto3 = "1.24.9"
+celery = "5.2.2"
+cryptography = ">=35.0.0"
+Django = "3.2.16"
+django-celery-beat = "2.1.0"
+django-clearcache = "^1.2.1"
+django-cors-headers = ">=3.5.0"
+django-countries = "7.2.1"
+django-extensions = "3.0.5"
+django-filter = "2.4.0"
+django-fixture-magic = "0.1.5"
+django-localflavor = "^3.1"
+django-oauth-toolkit = "2.0.0"
+django-pandas = "^0.6.6"
+django-phonenumber-field = {version = "5.2.0", extras = ["phonenumbers"]}
+django-redis = "^5.2.0"
+django-userforeignkey = "0.3.0"
+djangorestframework = ">=3.11.1"
+djangorestframework-simplejwt = "5.2.0"
+drf-compound-fields = "2.0.0"
+drf-nested-routers = "0.93.4"
+future = "0.18.2"
+gcloud = "0.18.3"
+google-cloud-secret-manager = "2.8.0"
+google-cloud-pubsub = "2.9.0"
+google-cloud-storage = "2.1.0"
+gunicorn = "20.0.4"
+jwcrypto = "1.4"
+numpy = "<1.23"
+oauthlib = "3.2.1"
+pandas = "<1.4"
+protobuf = "4.21.6"
+psycopg2-binary = "2.8.6"
+pydantic = "1.9.0"
+python-dotenv = "0.15.0"
+redis = "3.5.3"
+requests = "2.25.1"
+ringcentral = "0.7.13"
+shortuuid = "1.0.1"
+twilio = "7.3.2"
+xmltodict = "0.12.0"
+"backports.zoneinfo" = "^0.2.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+bpython = "^0.23"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
