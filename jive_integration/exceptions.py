@@ -1,0 +1,2 @@
+class RefreshTokenNoLongerRefreshableException(Exception):
+    pass

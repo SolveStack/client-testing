@@ -19,6 +19,7 @@ def test_jive_access_token():
     jive_client = JiveClient(
         client_id=JIVE_CLIENT_ID,
         client_secret=JIVE_CLIENT_SECRET,
+        access_token=STARTING_ACCESS_TOKEN,
         refresh_token=STARTING_REFRESH_TOKEN,
     )
     assert bool(jive_client.access_token)
