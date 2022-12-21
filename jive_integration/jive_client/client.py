@@ -418,6 +418,43 @@ class JiveClient:
 
         return lines
 
+    def list_voicemail_boxes(self, account_key: str) -> List[Dict]:
+        """
+        List all voicemail boxes this user can access.
+
+        https://developer.goto.com/GoToConnect#operation/fetchVoicemailbox
+
+        {
+            "nextPageMarker": "a159e8fbea8e53848",
+            "items": [
+                {
+                    "voicemailboxId": "606d12ff-9482-4ff0-8971-95133ffc47d1",
+                    "organizationId": "be342206-96ac-482b-bd2d-5fb317e7daa1",
+                    "accountKey": 2930718022414575000,
+                    "extensionNumber": "1243",
+                    "lastUpdatedTimestamp": "2019-08-24T14:15:22Z",
+                    "newMessageCount": 0,
+                    "readMessageCount": 0
+                }
+            ]
+        }
+        """
+        response = self.__request(method="get", path="/voicemail/v1/voicemailboxes")
+        response.raise_for_status()
+        body = response.json()
+
+        try:
+            # TODO: iterate through pages
+
+            # iterate through items
+            for item in body["items"]:
+                # save voicemailbox
+                print(item)
+        except KeyError as e:
+            raise APIResponseException(
+                "Jive: failed to parse list voicemail boxes response"
+            ) from e
+
     def list_lines_all_users(self, account_key: str) -> List[Line]:
         """
         List all lines available to all the user's account and pair them with their given organization id.
