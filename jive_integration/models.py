@@ -28,9 +28,9 @@ class JiveAPICredentials(AuditTrailModel):
 
     id = ShortUUIDField(primary_key=True, editable=False)
     # token_type = "Bearer"
-    access_token = models.TextField(blank=True)
+    access_token = models.TextField(blank=True)  # required for logging in
     access_token_expires_at = models.DateTimeField(null=True)
-    refresh_token = models.TextField(blank=True)
+    refresh_token = models.TextField(blank=True)  # required for logging in
     scope = models.TextField(blank=True)
     # firstName
     # lastName
@@ -186,6 +186,21 @@ class JiveLine(AuditTrailModel):
 
     source_jive_id = models.CharField(max_length=64, unique=True)
     source_organization_jive_id = models.CharField(max_length=64)
+
+
+class JiveVoicemailBox(AuditTrailModel):
+    """
+    Represents an inbox for voicemails for a line, user, or ring group.
+    """
+
+    id = ShortUUIDField(primary_key=True, editable=False)
+    source_jive_id = models.CharField(max_length=64)
+    source_organization_jive_id = models.CharField(max_length=64)
+    source_account_key = models.CharField(max_length=255)
+    source_extension_number = models.IntegerField()
+    source_last_updated_timestamp = models.DateTimeField()
+    source_new_message_count = models.IntegerField()
+    source_read_message_count = models.IntegerField()
 
 
 class JiveSubscriptionEventExtract(AuditTrailModel):
