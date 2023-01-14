@@ -22,4 +22,9 @@ def publish_leg_b_ready_event(
         "jive_call_subscription_id": jive_call_subscription_id,
         "voip_provider_id": voip_provider_id,
     }
-    return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_leg_b_finished, publisher=publisher)
+    return publish_event(
+        event_attributes=event_attributes,
+        event=event,
+        topic_path=topic_path_leg_b_finished,
+        publisher=publisher,
+    )

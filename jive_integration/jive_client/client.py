@@ -4,7 +4,7 @@ import logging
 import urllib.parse
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import requests
 from django.utils import timezone
@@ -38,7 +38,10 @@ class Line:
         return hash(self.line_id + self.source_organization_jive_id)
 
     def __eq__(self, other):
-        return self.line_id == other.line_id and self.source_organization_jive_id == other.source_organization_jive_id
+        return (
+            self.line_id == other.line_id
+            and self.source_organization_jive_id == other.source_organization_jive_id
+        )
 
 
 class APIResponseException(Exception):
@@ -101,8 +104,13 @@ class _Authentication(AuthBase):
         Before sending the request check if the access token is present and not expired. If not, update the outgoing
         request with a valid access token header.
         """
-        if not self._access_token or (self._access_token_expires_at and timezone.now() >= self._access_token_expires_at):
-            log.info("Jive: Access token not present or expired, refreshing for a new access and refresh token.")
+        if not self._access_token or (
+            self._access_token_expires_at
+            and timezone.now() >= self._access_token_expires_at
+        ):
+            log.info(
+                "Jive: Access token not present or expired, refreshing for a new access and refresh token."
+            )
             self.refresh_for_new_token()
             log.info("Jive: Done refreshing token.")
 
@@ -124,13 +132,17 @@ class _Authentication(AuthBase):
 
         https://developer.goto.com/guides/HowTos/05_HOW_refreshToken/
         """
-        log.info(f"Jive: Refreshing for a new token for self._jive_api_credentials.id={self._jive_api_credentials.id if self._jive_api_credentials else ''}")
+        log.info(
+            f"Jive: Refreshing for a new token for self._jive_api_credentials.id={self._jive_api_credentials.id if self._jive_api_credentials else ''}"
+        )
 
         request_body = {
             "grant_type": "refresh_token",
             "refresh_token": self._refresh_token,
         }
-        log.debug(f"Jive: Refresh token request_body={request_body}, self._client_id='{self._client_id}', self._client_secret='{self._client_secret}'")
+        log.debug(
+            f"Jive: Refresh token request_body={request_body}, self._client_id='{self._client_id}', self._client_secret='{self._client_secret}'"
+        )
         response: requests.Response = requests.request(
             method="post",
             url=urllib.parse.urljoin(self._goto_api_url, "/oauth/v2/token"),
@@ -140,7 +152,9 @@ class _Authentication(AuthBase):
         )
 
         self.__detect_bad_auth_response(response, OAuthTokenTypes.REFRESH_TOKEN)
-        self.__parse_token_response(response=response, token_type=OAuthTokenTypes.REFRESH_TOKEN)
+        self.__parse_token_response(
+            response=response, token_type=OAuthTokenTypes.REFRESH_TOKEN
+        )
 
     def exchange_code(self, code: str, redirect_uri: str):
         """
@@ -156,16 +170,30 @@ class _Authentication(AuthBase):
             url=urllib.parse.urljoin(self._authentication_url, "/oauth/token"),
             auth=HTTPBasicAuth(self._client_id, self._client_secret),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data={"grant_type": "authorization_code", "code": code, "redirect_uri": redirect_uri, "client_id": self._client_id},
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": redirect_uri,
+                "client_id": self._client_id,
+            },
         )
 
-        self.__detect_bad_auth_response(response=response, token_type=OAuthTokenTypes.ACCESS_TOKEN)
-        self.__parse_token_response(response=response, token_type=OAuthTokenTypes.ACCESS_TOKEN)
+        self.__detect_bad_auth_response(
+            response=response, token_type=OAuthTokenTypes.ACCESS_TOKEN
+        )
+        self.__parse_token_response(
+            response=response, token_type=OAuthTokenTypes.ACCESS_TOKEN
+        )
 
-    def __detect_bad_auth_response(self, response: Optional[requests.Response], token_type: OAuthTokenTypes) -> None:
+    def __detect_bad_auth_response(
+        self, response: Optional[requests.Response], token_type: OAuthTokenTypes
+    ) -> None:
         # When giving an expired refresh token (with all other parameters correct),
         # a 400 response with the most cryptic error comes back from the Jive side:
-        REFRESH_TOKEN_NO_LONGER_REFRESHABLE_JIVE_RESPONSE_DATA = {"error": "invalid_request", "error_description": "Required parameter(s) missing or wrong."}
+        REFRESH_TOKEN_NO_LONGER_REFRESHABLE_JIVE_RESPONSE_DATA = {
+            "error": "invalid_request",
+            "error_description": "Required parameter(s) missing or wrong.",
+        }
 
         try:
             response.raise_for_status()
@@ -173,13 +201,21 @@ class _Authentication(AuthBase):
             msg = f"Jive: Problem occurred from auth response"
             if response is not None:
                 response_data = safe_get_response_json(response)
-                if token_type == OAuthTokenTypes.REFRESH_TOKEN and response_data == REFRESH_TOKEN_NO_LONGER_REFRESHABLE_JIVE_RESPONSE_DATA:
-                    raise RefreshTokenNoLongerRefreshableException(f"{msg} response_data='{response_data}'")
+                if (
+                    token_type == OAuthTokenTypes.REFRESH_TOKEN
+                    and response_data
+                    == REFRESH_TOKEN_NO_LONGER_REFRESHABLE_JIVE_RESPONSE_DATA
+                ):
+                    raise RefreshTokenNoLongerRefreshableException(
+                        f"{msg} response_data='{response_data}'"
+                    )
                 if response.text:
                     msg = f"{msg}. Response text: '{response.text}'"
             raise Exception(msg)
 
-    def __parse_token_response(self, response: requests.Response, token_type: OAuthTokenTypes) -> None:
+    def __parse_token_response(
+        self, response: requests.Response, token_type: OAuthTokenTypes
+    ) -> None:
         """
         Called by first time exchange_code and refresh_for_new_token
 
@@ -188,15 +224,21 @@ class _Authentication(AuthBase):
 
         body = response.json()
 
-        log.info(f"Jive: {self._logging_prefix.get(token_type)} for self._jive_api_credentials.id={self._jive_api_credentials.id if self._jive_api_credentials else ''}")
+        log.info(
+            f"Jive: {self._logging_prefix.get(token_type)} for self._jive_api_credentials.id={self._jive_api_credentials.id if self._jive_api_credentials else ''}"
+        )
         try:
             self._access_token: str = body["access_token"]
             self._account_key: Optional[str] = body.get("account_key")
             self._organizer_key: Optional[str] = body.get("organizer_key")
             self._scope: Optional[str] = body.get("scope")
-            self._principal: Optional[str] = body.get("principal")  # email address associated to the account
+            self._principal: Optional[str] = body.get(
+                "principal"
+            )  # email address associated to the account
             self._refresh_token: str = body["refresh_token"]
-            self._access_token_expires_at: datetime = timezone.now() + timedelta(seconds=body["expires_in"])
+            self._access_token_expires_at: datetime = timezone.now() + timedelta(
+                seconds=body["expires_in"]
+            )
         except (KeyError, IndexError) as exc:
             log.debug(f"Jive: invalid token response: {response.content}")
             raise APIResponseException("failed to parse token response") from exc
@@ -208,12 +250,18 @@ class _Authentication(AuthBase):
             self._jive_api_credentials.organizer_key = self._organizer_key
             if self._scope is not None:
                 self._jive_api_credentials.scope
-            self._jive_api_credentials.access_token_expires_at = self._access_token_expires_at
+            self._jive_api_credentials.access_token_expires_at = (
+                self._access_token_expires_at
+            )
             if self._principal:
                 self._jive_api_credentials.email = self._principal
-            log.info(f"Saving self._jive_api_credentials to RDBMS: {self._jive_api_credentials.id}")
+            log.info(
+                f"Saving self._jive_api_credentials to RDBMS: {self._jive_api_credentials.id}"
+            )
             self._jive_api_credentials.save()
-            log.info(f"Saved self._jive_api_credentials to RDBMS: {self._jive_api_credentials.id}")
+            log.info(
+                f"Saved self._jive_api_credentials to RDBMS: {self._jive_api_credentials.id}"
+            )
 
 
 class JiveClient:
@@ -233,7 +281,11 @@ class JiveClient:
         jive_api_credentials: Optional[JiveAPICredentials] = None,
         api_base_url: str = "",
     ):
-        self.__auth = _Authentication(client_id=client_id, client_secret=client_secret, jive_api_credentials=jive_api_credentials)
+        self.__auth = _Authentication(
+            client_id=client_id,
+            client_secret=client_secret,
+            jive_api_credentials=jive_api_credentials,
+        )
 
         self.__session = requests.Session()
         self.__session.auth = self.__auth
@@ -279,7 +331,12 @@ class JiveClient:
         """
         self.__auth.exchange_code(code, request_uri)
 
-    def create_webhook_channel(self, jive_api_credentials: JiveAPICredentials, webhook_url: str, lifetime: int = 2592000) -> JiveChannel:
+    def create_webhook_channel(
+        self,
+        jive_api_credentials: JiveAPICredentials,
+        webhook_url: str,
+        lifetime: int = 2592000,
+    ) -> JiveChannel:
         """
         Create a record for the intended channel and request the channel from the Jive API.  If the request fails
         the record will be deleted.
@@ -295,9 +352,13 @@ class JiveClient:
         signature = signature.hexdigest()
 
         channel = JiveChannel.objects.create(
-            jive_api_credentials=jive_api_credentials, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime)
+            jive_api_credentials=jive_api_credentials,
+            signature=signature,
+            expires_at=timezone.now() + timedelta(seconds=lifetime),
         )
-        endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}"
+        endpoint = (
+            f"https://api.jive.com/notification-channel/v1/channels/{channel.name}"
+        )
 
         try:
             resp = self.__request(
@@ -305,13 +366,19 @@ class JiveClient:
                 path=endpoint,
                 json={
                     "channelLifetime": lifetime,
-                    "webhookChannelData": {"webhook": {"url": webhook_url}, "channelType": "Webhook", "signature": {"sharedSecret": signature}},
+                    "webhookChannelData": {
+                        "webhook": {"url": webhook_url},
+                        "channelType": "Webhook",
+                        "signature": {"sharedSecret": signature},
+                    },
                 },
             )
             response_body = resp.json()
             resp.raise_for_status()
 
-            log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
+            log.info(
+                f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'"
+            )
             channel_id = response_body.get("channelId")
             channel.source_jive_id = channel_id
             channel.save()
@@ -336,9 +403,13 @@ class JiveClient:
         resp.raise_for_status()
         response_body = resp.json()
 
-        log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
+        log.info(
+            f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'"
+        )
 
-        channel.expires_at = timezone.now() + timedelta(seconds=response_body.get("channelLifetime"))
+        channel.expires_at = timezone.now() + timedelta(
+            seconds=response_body.get("channelLifetime")
+        )
         channel.save()
 
     def delete_webhook_channel(self, channel: JiveChannel) -> JiveChannel:
@@ -348,7 +419,9 @@ class JiveClient:
         resp = self.__request(method="delete", url=endpoint)
         log.info(f"Jive: Sent DELETE to endpoint='{endpoint}'. Verifying status.")
         resp.raise_for_status()
-        log.info(f"Jive: DELETE to endpoint='{endpoint}' successful - no response body.")
+        log.info(
+            f"Jive: DELETE to endpoint='{endpoint}' successful - no response body."
+        )
 
         log.info(f"Jive: Saving JiveChannel channel='{channel}' with active=False")
         channel.active = False
@@ -365,13 +438,19 @@ class JiveClient:
 
         dependency: channelID not channel Id
         """
-        resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.source_jive_id})
+        resp = self.__request(
+            method="post",
+            url="https://realtime.jive.com/v2/session",
+            json={"channelId": channel.source_jive_id},
+        )
         resp.raise_for_status()
         body = resp.json()
 
         try:
             log.info(f"Jive Session Created - response body='{body}'")
-            log.info(f"Saving Jive Session to the database: channel='{channel}', url={body['self']}")
+            log.info(
+                f"Saving Jive Session to the database: channel='{channel}', url={body['self']}"
+            )
             session = JiveSession.objects.create(channel=channel, url=body["self"])
             log.info(f"Saved session.id='{session.id}' to the database")
             return session
@@ -388,13 +467,28 @@ class JiveClient:
             method="post",
             url=session.url + "/subscriptions",
             json=[
-                {"id": line.line_id, "type": "dialog", "entity": {"id": line.line_id, "type": "line.v2", "account": line.source_organization_jive_id}}
+                {
+                    "id": line.line_id,
+                    "type": "dialog",
+                    "entity": {
+                        "id": line.line_id,
+                        "type": "line.v2",
+                        "account": line.source_organization_jive_id,
+                    },
+                }
                 for line in lines
             ],
         ).raise_for_status()
 
         JiveLine.objects.bulk_create(
-            [JiveLine(session=session, source_jive_id=line.line_id, source_organization_jive_id=line.source_organization_jive_id) for line in lines],
+            [
+                JiveLine(
+                    session=session,
+                    source_jive_id=line.line_id,
+                    source_organization_jive_id=line.source_organization_jive_id,
+                )
+                for line in lines
+            ],
             ignore_conflicts=True,
         )
 
@@ -412,11 +506,53 @@ class JiveClient:
 
         try:
             for item in body["items"]:
-                lines.append(Line(line_id=item["id"], source_organization_jive_id=item["organization"]["id"]))
+                lines.append(
+                    Line(
+                        line_id=item["id"],
+                        source_organization_jive_id=item["organization"]["id"],
+                    )
+                )
         except KeyError as exc:
-            raise APIResponseException("Jive: failed to parse list lines response") from exc
+            raise APIResponseException(
+                "Jive: failed to parse list lines response"
+            ) from exc
 
         return lines
+
+    def list_extensions(self, account_key: str) -> List[Dict]:
+        """
+        https://developer.goto.com/GoToConnect/#tag/Extension/paths/~1voice-admin~1v1~1extensions/get
+
+        {
+            "nextPageMarker": "a159e8fbea8e53848",
+            "items": [
+                {
+                "id": "12ed21de-9be4-4ca7-85d2-0f2356cacc83",
+                "accountKey": "1956177422157042821",
+                "name": "Human Resources",
+                "number": "1545",
+                "omitFromDirectories": false,
+                "organizationId": "01597581-dc94-8f38-161b-000100420002",
+                "type": "DIRECT_EXTENSION"
+                }
+            ]
+        }
+        """
+        response = self.__request(method="get", path="/voice-admin/v1/extensions", params={"accountKey": account_key})
+        response.raise_for_status()
+        body = response.json()
+
+        try:
+            # TODO: iterate through pages
+
+            # iterate through items
+            for item in body["items"]:
+                # save extension number
+                print(item)
+        except KeyError as e:
+            raise APIResponseException(
+                "Jive: failed to parse list extensions response"
+            ) from e
 
     def list_lines_all_users(self, account_key: str) -> List[Line]:
         """
@@ -427,7 +563,9 @@ class JiveClient:
 
         lines: List[Line] = []
 
-        resp = self.__request(method="get", path=f"/users/v1/users?accountKey={account_key}")
+        resp = self.__request(
+            method="get", path=f"/users/v1/users?accountKey={account_key}"
+        )
         resp.raise_for_status()
         body = resp.json()
 
@@ -435,9 +573,16 @@ class JiveClient:
             for item in body.get("items", []):
                 item_lines = item.get("lines", [])
                 for item_line in item_lines:
-                    lines.append(Line(line_id=item_line["id"], source_organization_jive_id=item_line["organization"]["id"]))
+                    lines.append(
+                        Line(
+                            line_id=item_line["id"],
+                            source_organization_jive_id=item_line["organization"]["id"],
+                        )
+                    )
         except KeyError as exc:
-            raise APIResponseException("Jive: Failed to parse list_lines_all_users response") from exc
+            raise APIResponseException(
+                "Jive: Failed to parse list_lines_all_users response"
+            ) from exc
 
         return lines
 
@@ -457,14 +602,20 @@ class JiveClient:
         response = self.__session.request(*args, **kwargs)
 
         if response.status_code == status.HTTP_401_UNAUTHORIZED:
-            log.info("Jive: Status code is a 401, refreshing for a new access and refresh token.")
+            log.info(
+                "Jive: Status code is a 401, refreshing for a new access and refresh token."
+            )
             self.refresh_for_new_token()
             log.info("Jive: Done refreshing token.")
             # Retry:
             # TODO: PTECH-1568 remove these sensitive logs once we understand and solve why refreshes don't seem to be happening in time.
-            log.info(f"Jive: Retrying original request with args='{args}' and kwargs='{kwargs}'")
+            log.info(
+                f"Jive: Retrying original request with args='{args}' and kwargs='{kwargs}'"
+            )
             response = self.__session.request(*args, **kwargs)
-            log.info(f"Jive: Retry response is '{response}' with original request args='{args}' and kwargs='{kwargs}'")
+            log.info(
+                f"Jive: Retry response is '{response}' with original request args='{args}' and kwargs='{kwargs}'"
+            )
             if response.status_code == status.HTTP_401_UNAUTHORIZED:
                 log.info(
                     f"Jive: Retry response still unauthorized, giving up. response.status_code='{response.status_code}' with original request args='{args}' and kwargs='{kwargs}'"

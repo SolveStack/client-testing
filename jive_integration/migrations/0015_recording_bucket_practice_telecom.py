@@ -7,14 +7,19 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0021_auto_20221114_2028'),
-        ('jive_integration', '0014_rename_jive_connection_related_models'),
+        ("core", "0021_auto_20221114_2028"),
+        ("jive_integration", "0014_rename_jive_connection_related_models"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='jiveawsrecordingbucket',
-            name='practice_telecom',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='bucket', to='core.practicetelecom'),
+            model_name="jiveawsrecordingbucket",
+            name="practice_telecom",
+            field=models.OneToOneField(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="bucket",
+                to="core.practicetelecom",
+            ),
         ),
     ]

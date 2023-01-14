@@ -21,8 +21,24 @@ CAMELCASE_REGEX_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 class JiveAPICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = JiveAPICredentials
-        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "last_sync"]
-        fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "practice_telecom", "last_sync", "active"]
+        read_only_fields = [
+            "id",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+            "last_sync",
+        ]
+        fields = [
+            "id",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+            "practice_telecom",
+            "last_sync",
+            "active",
+        ]
 
 
 class JiveAWSRecordingBucketSerializer(serializers.ModelSerializer):
@@ -39,7 +55,14 @@ class JiveAWSRecordingBucketSerializer(serializers.ModelSerializer):
             "policy_arn",
             "bucket_name",
         ]
-        fields = ["id", "practice_telecom", "access_key_id", "username", "policy_arn", "bucket_name"]
+        fields = [
+            "id",
+            "practice_telecom",
+            "access_key_id",
+            "username",
+            "policy_arn",
+            "bucket_name",
+        ]
 
 
 class JiveChannelSerializer(serializers.ModelSerializer):
@@ -70,7 +93,13 @@ class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JiveSubscriptionEventExtract
-        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+        read_only_fields = [
+            "id",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+        ]
         fields = "__all__"
 
     def to_internal_value(self, incoming_data):
@@ -116,11 +145,15 @@ class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):
             return_value.pop("data")
 
         data_created = return_value.get("data_created")
-        if type(data_created) != None and type(data_created) != datetime:  # convert to datetime if present
+        if (
+            type(data_created) != None and type(data_created) != datetime
+        ):  # convert to datetime if present
             data_created = datetime.fromtimestamp(int(data_created / 1000))
             return_value.update({"data_created": data_created})
 
         if not incoming_data.get("peerlogic_call_id"):
-            return_value.update({"peerlogic_call_id": ""})  # conform to Django's blankable charfields as opposed to null fields
+            return_value.update(
+                {"peerlogic_call_id": ""}
+            )  # conform to Django's blankable charfields as opposed to null fields
 
         return return_value

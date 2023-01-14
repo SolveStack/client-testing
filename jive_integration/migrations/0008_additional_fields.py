@@ -7,33 +7,36 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jive_integration', '0007_bucket_additional_fields'),
+        ("jive_integration", "0007_bucket_additional_fields"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='jiveconnection',
-            name='account_key',
+            model_name="jiveconnection",
+            name="account_key",
             field=models.CharField(blank=True, max_length=20),
         ),
         migrations.AddField(
-            model_name='jiveconnection',
-            name='email',
+            model_name="jiveconnection",
+            name="email",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='jiveconnection',
-            name='organizer_key',
+            model_name="jiveconnection",
+            name="organizer_key",
             field=models.CharField(blank=True, max_length=20),
         ),
         migrations.AddField(
-            model_name='jiveconnection',
-            name='scope',
+            model_name="jiveconnection",
+            name="scope",
             field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='jiveawsrecordingbucket',
-            name='connection',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='jive_integration.jiveconnection'),
+            model_name="jiveawsrecordingbucket",
+            name="connection",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="jive_integration.jiveconnection",
+            ),
         ),
     ]

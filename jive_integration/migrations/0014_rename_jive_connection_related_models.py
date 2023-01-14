@@ -6,10 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jive_integration', '0013_jiveapicredentials_additional_fields'),
+        ("jive_integration", "0013_jiveapicredentials_additional_fields"),
     ]
 
     operations = [
-        migrations.RenameField('JiveAWSRecordingBucket', 'connection', 'jive_api_credentials'),
-        migrations.RenameField('JiveChannel', 'connection', 'jive_api_credentials')
+        migrations.RenameField(
+            "JiveAWSRecordingBucket", "connection", "jive_api_credentials"
+        ),
+        migrations.RenameField("JiveChannel", "connection", "jive_api_credentials"),
     ]

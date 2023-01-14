@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jive_integration', '0003_jivesubscriptioneventextract'),
+        ("jive_integration", "0003_jivesubscriptioneventextract"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='JiveCallPartial',
+            name="JiveCallPartial",
         ),
     ]

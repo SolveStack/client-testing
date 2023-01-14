@@ -7,48 +7,72 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jive_integration', '0008_additional_fields'),
+        ("jive_integration", "0008_additional_fields"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='jiveawsrecordingbucket',
-            name='access_key_id',
+            model_name="jiveawsrecordingbucket",
+            name="access_key_id",
             field=models.CharField(blank=True, max_length=128),
         ),
         migrations.AlterField(
-            model_name='jiveawsrecordingbucket',
-            name='bucket_name',
+            model_name="jiveawsrecordingbucket",
+            name="bucket_name",
             field=models.CharField(blank=True, max_length=63),
         ),
         migrations.AlterField(
-            model_name='jiveawsrecordingbucket',
-            name='connection',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='bucket', to='jive_integration.jiveconnection'),
+            model_name="jiveawsrecordingbucket",
+            name="connection",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="bucket",
+                to="jive_integration.jiveconnection",
+            ),
         ),
         migrations.AlterField(
-            model_name='jiveawsrecordingbucket',
-            name='policy_arn',
+            model_name="jiveawsrecordingbucket",
+            name="policy_arn",
             field=models.CharField(blank=True, max_length=2048),
         ),
         migrations.AlterField(
-            model_name='jiveawsrecordingbucket',
-            name='username',
+            model_name="jiveawsrecordingbucket",
+            name="username",
             field=models.CharField(blank=True, max_length=64),
         ),
         migrations.AlterField(
-            model_name='jivesubscriptioneventextract',
-            name='data_is_click_to_call',
+            model_name="jivesubscriptioneventextract",
+            name="data_is_click_to_call",
             field=models.BooleanField(blank=True),
         ),
         migrations.AlterField(
-            model_name='jivesubscriptioneventextract',
-            name='data_state',
-            field=models.CharField(choices=[('CREATED', 'Created'), ('RINGING', 'Ringing'), ('ANSWERED', 'Answered'), ('BRIDGED', 'Bridged'), ('UNBRIDGED', 'Unbridged'), ('HUNGUP', 'Hungup')], db_index=True, max_length=16),
+            model_name="jivesubscriptioneventextract",
+            name="data_state",
+            field=models.CharField(
+                choices=[
+                    ("CREATED", "Created"),
+                    ("RINGING", "Ringing"),
+                    ("ANSWERED", "Answered"),
+                    ("BRIDGED", "Bridged"),
+                    ("UNBRIDGED", "Unbridged"),
+                    ("HUNGUP", "Hungup"),
+                ],
+                db_index=True,
+                max_length=16,
+            ),
         ),
         migrations.AlterField(
-            model_name='jivesubscriptioneventextract',
-            name='jive_type',
-            field=models.CharField(choices=[('announce', 'Announce'), ('replace', 'Replace'), ('withdraw', 'Withdraw'), ('keepalive', 'Keepalive')], db_index=True, max_length=16),
+            model_name="jivesubscriptioneventextract",
+            name="jive_type",
+            field=models.CharField(
+                choices=[
+                    ("announce", "Announce"),
+                    ("replace", "Replace"),
+                    ("withdraw", "Withdraw"),
+                    ("keepalive", "Keepalive"),
+                ],
+                db_index=True,
+                max_length=16,
+            ),
         ),
     ]
