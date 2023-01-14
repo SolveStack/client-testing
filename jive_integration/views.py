@@ -60,7 +60,9 @@ log = logging.getLogger(__name__)
 
 
 def generate_redirect_uri(request):
-    return request.build_absolute_uri(reverse("jive_integration:authentication-callback"))
+    return request.build_absolute_uri(
+        reverse("jive_integration:authentication-callback")
+    )
 
 
 def generate_jive_callback_url(
@@ -109,10 +111,14 @@ def webhook(request):
 
     try:
         req = json.loads(request.body)
-        timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
+        timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(
+            req["timestamp"]
+        )
         content = json.loads(req["content"])
     except (json.JSONDecodeError, KeyError):
-        log.error(f"{log_prefix} Could not determine timestamp of request. Invalid response sent to webhook.")
+        log.error(
+            f"{log_prefix} Could not determine timestamp of request. Invalid response sent to webhook."
+        )
         return HttpResponse(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     log.info(f"{log_prefix} Validating event")
@@ -127,7 +133,10 @@ def webhook(request):
         log.error(
             f"{log_prefix} Error from subscription_event_serializer validation from jive_originator_id='{jive_originator_id}': errors='{subscription_event_serializer.errors}'. Setting response to invalid. Further processing will resume but may throw errors."
         )
-        response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
+        response = Response(
+            status=status.HTTP_400_BAD_REQUEST,
+            data={"errors": subscription_event_serializer.errors},
+        )
 
     log.info(f"{log_prefix} Validated event.")
     event = subscription_event_serializer.save()
@@ -143,15 +152,25 @@ def webhook(request):
         dialed_number = dialed_number.split(">")[0]
 
     source_jive_id = content.get("subId")
-    source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
-    log.info(f"{log_prefix} Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'")
-    line: JiveLine = JiveLine.objects.filter(source_organization_jive_id=source_organization_jive_id).first()
-    log.info(f"{log_prefix} JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
+    source_organization_jive_id = jive_request_data_key_value_pair.get(
+        "originatorOrganizationId"
+    )
+    log.info(
+        f"{log_prefix} Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'"
+    )
+    line: JiveLine = JiveLine.objects.filter(
+        source_organization_jive_id=source_organization_jive_id
+    ).first()
+    log.info(
+        f"{log_prefix} JiveLine found with originatorOrganizationId='{source_organization_jive_id}'"
+    )
 
     channel = line.session.channel
     subscription_event_data.update({"jive_channel_id": channel.id})
 
-    voip_provider_id = line.session.channel.jive_api_credentials.practice_telecom.voip_provider_id
+    voip_provider_id = (
+        line.session.channel.jive_api_credentials.practice_telecom.voip_provider_id
+    )
     practice = line.session.channel.jive_api_credentials.practice_telecom.practice
 
     # Bucket can be overridden for our testing jive account
@@ -168,7 +187,9 @@ def webhook(request):
         if call_exists:
             peerlogic_call = wait_for_peerlogic_call(call_id=call_id)
         else:
-            log.info(f"{log_prefix} No previous peerlogic call found from previous events in the database - Creating peerlogic call.")
+            log.info(
+                f"{log_prefix} No previous peerlogic call found from previous events in the database - Creating peerlogic call."
+            )
             try:
                 peerlogic_call = create_peerlogic_call(
                     call_id=call_id,
@@ -178,13 +199,17 @@ def webhook(request):
                     practice=practice,
                 )
                 call_id = peerlogic_call.id
-                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
+                log.info(
+                    f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'."
+                )
             except ValidationError:
                 log.exception(f"Error creating a new Peerlogic call.")
 
     elif jive_event_type == JiveEventTypeChoices.REPLACE:
         log.info(f"{log_prefix} Received jive replace event.")
-        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
+        call_id = get_call_id_from_previous_announce_events_by_originator_id(
+            jive_originator_id
+        )
 
     elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
         log.info(f"{log_prefix} Received jive withdraw event.")
@@ -200,7 +225,9 @@ def webhook(request):
             )
             log.info(f"{log_prefix} Handled jive withdraw event.")
         except Exception as e:
-            log.exception(f"{log_prefix} Exception='{e}' occurred during withdraw event.")
+            log.exception(
+                f"{log_prefix} Exception='{e}' occurred during withdraw event."
+            )
             return response  # must return here since we may not have a valid call_id
 
     # always get the call_id onto the event
@@ -252,11 +279,19 @@ def authentication_callback(request: Request):
     log.info("Jive: Checking for authorization code in query parameters.")
     authorization_code: Optional[str] = request.query_params.get("code")
     if not authorization_code:
-        raise ValidationError({"errors": {"code": "Contact support@peerlogic.com - authorization code is missing from the callback."}})
+        raise ValidationError(
+            {
+                "errors": {
+                    "code": "Contact support@peerlogic.com - authorization code is missing from the callback."
+                }
+            }
+        )
     log.info("Jive: Found authorization code.")
 
     log.info("Jive: Instantiating JiveClient.")
-    jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET)
+    jive: JiveClient = JiveClient(
+        client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET
+    )
     log.info("Jive: Instantiated JiveClient.")
 
     log.info("Jive: Exchanging authorization code for an access token.")
@@ -267,37 +302,76 @@ def authentication_callback(request: Request):
     principal = jive.principal  # this is the email associated with user
     scope = jive.scope  # this is the scope of the authenticated user
     if not principal:
-        log.exception("Jive: No principal (email associated with the user) found in access token response.")
-        raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
+        log.exception(
+            "Jive: No principal (email associated with the user) found in access token response."
+        )
+        raise ValidationError(
+            {
+                "errors": {
+                    "principal": "email is missing from your submission - are you logged in?"
+                }
+            }
+        )
 
     log.info("Jive: Refresh token to get account key and organization key.")
     try:
         jive.refresh_for_new_token()
     except RefreshTokenNoLongerRefreshableException as e:
-        raise ValidationError({"errors": {"refresh_token": "Your GoTo account is no longer able to connect to Peerlogic - contact support@peerlogic.com."}})
+        raise ValidationError(
+            {
+                "errors": {
+                    "refresh_token": "Your GoTo account is no longer able to connect to Peerlogic - contact support@peerlogic.com."
+                }
+            }
+        )
     log.info("Jive: Done refreshing token.")
 
-    log.info(f"Jive: Checking for existing JiveAPICredentials with principal={principal}.")
+    log.info(
+        f"Jive: Checking for existing JiveAPICredentials with principal={principal}."
+    )
     jive_api_credentials: JiveAPICredentials = None
     with suppress(JiveAPICredentials.DoesNotExist):
-        jive_api_credentials = JiveAPICredentials.objects.get(practice_telecom__practice__agent__user__email=principal)
+        jive_api_credentials = JiveAPICredentials.objects.get(
+            practice_telecom__practice__agent__user__email=principal
+        )
         if jive_api_credentials:
-            log.info(f"Jive: Found existing JiveAPICredentials with principal={principal}.")
+            log.info(
+                f"Jive: Found existing JiveAPICredentials with principal={principal}."
+            )
 
     if not jive_api_credentials:
-        log.info(f"Jive: No existing JiveAPICredentials exists with user email principal={principal}.")
-        log.info(f"Jive: Validating a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
+        log.info(
+            f"Jive: No existing JiveAPICredentials exists with user email principal={principal}."
+        )
+        log.info(
+            f"Jive: Validating a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'."
+        )
         # TODO: deal with users with multiple practices (Organizations ACL)
-        practice_telecom, errors = get_validated_practice_telecom(voip_provider__integration_type=VoipProviderIntegrationTypes.JIVE, email=principal)
+        practice_telecom, errors = get_validated_practice_telecom(
+            voip_provider__integration_type=VoipProviderIntegrationTypes.JIVE,
+            email=principal,
+        )
         if not practice_telecom:
-            log.exception(f"No practice telecom has set up for this Jive customer with user email or principal='{principal}', errors='{errors}'")
-            raise ValidationError({"errors": {"code": "Contact support@peerlogic.com - your practice telecom has not been set up with this user yet."}})
-        log.info(f"Jive: Successfully validated a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
+            log.exception(
+                f"No practice telecom has set up for this Jive customer with user email or principal='{principal}', errors='{errors}'"
+            )
+            raise ValidationError(
+                {
+                    "errors": {
+                        "code": "Contact support@peerlogic.com - your practice telecom has not been set up with this user yet."
+                    }
+                }
+            )
+        log.info(
+            f"Jive: Successfully validated a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'."
+        )
 
         log.info(
             f"Jive: Creating JiveAPICredentials with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'."
         )
-        jive_api_credentials = JiveAPICredentials(practice_telecom=practice_telecom, email=principal)
+        jive_api_credentials = JiveAPICredentials(
+            practice_telecom=practice_telecom, email=principal
+        )
 
     jive_api_credentials.access_token = jive.access_token
     jive_api_credentials.refresh_token = jive.refresh_token
@@ -307,11 +381,15 @@ def authentication_callback(request: Request):
     jive_api_credentials.scope = scope
     log.info(f"Jive: Saving JiveAPICredentials with access_token='{jive.access_token}.")
     jive_api_credentials.save()
-    log.info(f"Jive: Saved JiveAPICredentials to the database with id='{jive_api_credentials.id}'.")
+    log.info(
+        f"Jive: Saved JiveAPICredentials to the database with id='{jive_api_credentials.id}'."
+    )
 
     resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
 
-    query_string_to_append_to_redirect_url = {"jive_api_credentials_id": jive_api_credentials.id}
+    query_string_to_append_to_redirect_url = {
+        "jive_api_credentials_id": jive_api_credentials.id
+    }
     # TODO: redirect them back to the application - need to know what route though
     # return redirect(urlencode(query_string_to_append_to_redirect_url))
     return HttpResponse(status=204)
@@ -324,7 +402,11 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        return super().get_queryset().filter(jive_api_credentials=self.kwargs.get("jive_api_credentials_pk"))
+        return (
+            super()
+            .get_queryset()
+            .filter(jive_api_credentials=self.kwargs.get("jive_api_credentials_pk"))
+        )
 
     def destroy(self, request, pk=None, jive_api_credentials_pk=None):
         if not (self.request.user.is_staff or self.request.user.is_superuser):
@@ -336,11 +418,21 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
 
         jive_api_credentials = channel.jive_api_credentials
 
-        log.info(f"Jive: Instantiating JiveClient with jive_api_credentials.id='{jive_api_credentials.id}'")
-        jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, jive_api_credentials=jive_api_credentials)
-        log.info("Jive: Instantiated JiveClient with jive_api_credentials.id='{jive_api_credentials.id}'")
+        log.info(
+            f"Jive: Instantiating JiveClient with jive_api_credentials.id='{jive_api_credentials.id}'"
+        )
+        jive: JiveClient = JiveClient(
+            client_id=settings.JIVE_CLIENT_ID,
+            client_secret=settings.JIVE_CLIENT_SECRET,
+            jive_api_credentials=jive_api_credentials,
+        )
+        log.info(
+            "Jive: Instantiated JiveClient with jive_api_credentials.id='{jive_api_credentials.id}'"
+        )
 
-        log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
+        log.info(
+            f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'"
+        )
         successfully_deleted_jive_side = False  # this is not needed in the current code but is kept here in case someone modifies the code-path below
         try:
             channel = jive.delete_webhook_channel(channel=channel)
@@ -349,15 +441,23 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
                 f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'"
             )
         except Exception as e:
-            log.exception(f"Jive: Could not delete webhook channel channel={channel}. Encountered exception='{e}' Setting to inactive in the RDBMS.")
+            log.exception(
+                f"Jive: Could not delete webhook channel channel={channel}. Encountered exception='{e}' Setting to inactive in the RDBMS."
+            )
             successfully_deleted_jive_side = False
             channel.active = False
             channel.save()
-            log.info(f"Jive: Set JiveChannel to inactive with pk='{channel.pk}', active='{channel.active}'")
+            log.info(
+                f"Jive: Set JiveChannel to inactive with pk='{channel.pk}', active='{channel.active}'"
+            )
 
         jive_channel_serializer = JiveChannelSerializer(channel)
         return Response(
-            status=status.HTTP_200_OK, data={"channel": jive_channel_serializer.data, "successfully_deleted_jive_side": successfully_deleted_jive_side}
+            status=status.HTTP_200_OK,
+            data={
+                "channel": jive_channel_serializer.data,
+                "successfully_deleted_jive_side": successfully_deleted_jive_side,
+            },
         )
 
 
@@ -373,7 +473,9 @@ class JiveAPICredentialsViewSet(viewsets.ModelViewSet):
         request,
         pk=None,
     ):
-        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_jive_api_credentials(
+        if not (
+            self.request.user.is_staff or self.request.user.is_superuser
+        ) and not does_practice_of_user_own_jive_api_credentials(
             jive_api_credentials_id=pk, user=request.user
         ):
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -382,22 +484,34 @@ class JiveAPICredentialsViewSet(viewsets.ModelViewSet):
         jive_api_credentials = JiveAPICredentials.objects.get(pk=pk)
         log.info(f"Got JiveAPICredentials from database with pk='{pk}'")
 
-        log.info(f"Resyncing jive_api_credentials for JiveAPICredentials with pk='{pk}'")
+        log.info(
+            f"Resyncing jive_api_credentials for JiveAPICredentials with pk='{pk}'"
+        )
         try:
-            response_data = resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+            response_data = resync_from_credentials(
+                jive_api_credentials=jive_api_credentials, request=request
+            )
         except RefreshTokenNoLongerRefreshableException as e:
             error_message = f"Jive: resync endpoint: Found no longer refreshable api credentials for jive_api_credentials.id='{jive_api_credentials.id}."
             log.exception(error_message)
             raise ValidationError({"error": error_message})
 
-        log.info(f"Jive: Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
+        log.info(
+            f"Jive: Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'"
+        )
 
         return Response(status=status.HTTP_200_OK, data=response_data)
 
 
-def does_practice_of_user_own_jive_api_credentials(jive_api_credentials_id: str, user: User) -> bool:
+def does_practice_of_user_own_jive_api_credentials(
+    jive_api_credentials_id: str, user: User
+) -> bool:
     jive_api_credentials = JiveAPICredentials.objects.get(pk=jive_api_credentials_id)
-    return get_practice_telecoms_belonging_to_user(user).filter(id=jive_api_credentials.practice_telecom.id).exists()
+    return (
+        get_practice_telecoms_belonging_to_user(user)
+        .filter(id=jive_api_credentials.practice_telecom.id)
+        .exists()
+    )
 
 
 class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
@@ -412,22 +526,35 @@ class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
             buckets_qs = JiveAWSRecordingBucket.objects.all()
         elif self.request.method in SAFE_METHODS:
             # Can see any practice's buckets if you are an assigned agent to a practice
-            practice_telecom_ids = get_practice_telecoms_belonging_to_user(user=self.request.user)
-            buckets_qs = JiveAWSRecordingBucket.objects.filter(practice_telecom__id__in=practice_telecom_ids)
+            practice_telecom_ids = get_practice_telecoms_belonging_to_user(
+                user=self.request.user
+            )
+            buckets_qs = JiveAWSRecordingBucket.objects.filter(
+                practice_telecom__id__in=practice_telecom_ids
+            )
         return buckets_qs.order_by("-modified_at")
 
     def create(self, request: Request, practice_telecom_pk: str = None) -> Response:
         # TODO: test non-admin request
         practice_telecom_pk = self.request.data.get("practice_telecom")
         if not (practice_telecom_pk) and (
-            self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)
+            self.request.user.is_staff
+            or self.request.user.is_superuser
+            or practice_telecom_pk
+            in get_practice_telecoms_belonging_to_user(request.user)
         ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        log.info(f"Jive: Creating JiveAWSRecordingBucket for practice_telecom_pk='{practice_telecom_pk}")
-        bucket = JiveAWSRecordingBucket.objects.create(practice_telecom_id=practice_telecom_pk)
+        log.info(
+            f"Jive: Creating JiveAWSRecordingBucket for practice_telecom_pk='{practice_telecom_pk}"
+        )
+        bucket = JiveAWSRecordingBucket.objects.create(
+            practice_telecom_id=practice_telecom_pk
+        )
         bucket.create_bucket()
-        log.info(f"Jive: Created JiveAWSRecordingBucket with id='{bucket.id}' practice_telecom_pk='{practice_telecom_pk}")
+        log.info(
+            f"Jive: Created JiveAWSRecordingBucket with id='{bucket.id}' practice_telecom_pk='{practice_telecom_pk}"
+        )
 
         serializer = JiveAWSRecordingBucketSerializer(bucket)
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
@@ -436,7 +563,12 @@ class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
     def bucket_credentials(self, request: Request, pk: str = None) -> Response:
         # TODO: test non-admin request
         practice_telecom_pk = self.request.data.get("practice_telecom_pk")
-        if not (self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)):
+        if not (
+            self.request.user.is_staff
+            or self.request.user.is_superuser
+            or practice_telecom_pk
+            in get_practice_telecoms_belonging_to_user(request.user)
+        ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         log.info(f"Getting JiveAWSRecordingBucket from database with pk='{pk}'")
@@ -467,11 +599,17 @@ def cron(request):
     JiveChannel.objects.filter(expires_at__lt=timezone.now()).delete()
 
     # for each user jive_api_credentials
-    for jive_api_credentials in JiveAPICredentials.objects.filter(active=True).order_by("-last_sync"):
+    for jive_api_credentials in JiveAPICredentials.objects.filter(active=True).order_by(
+        "-last_sync"
+    ):
         log.info(f"Jive: found jive_api_credentials: {jive_api_credentials}")
         try:
-            resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+            resync_from_credentials(
+                jive_api_credentials=jive_api_credentials, request=request
+            )
         except RefreshTokenNoLongerRefreshableException as e:
-            log.exception(f"Found not refreshable connection for jive_api_credentials.id='{jive_api_credentials.id}. Continuing.")
+            log.exception(
+                f"Found not refreshable connection for jive_api_credentials.id='{jive_api_credentials.id}. Continuing."
+            )
 
     return HttpResponse(status=202)

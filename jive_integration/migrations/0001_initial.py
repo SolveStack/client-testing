@@ -13,67 +13,145 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0008_alter_voipprovider_integration_type'),
+        ("core", "0008_alter_voipprovider_integration_type"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='JiveCallPartial',
+            name="JiveCallPartial",
             fields=[
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('start_time', models.DateTimeField()),
-                ('external_id', models.CharField(max_length=255)),
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("start_time", models.DateTimeField()),
+                ("external_id", models.CharField(max_length=255)),
             ],
         ),
         migrations.CreateModel(
-            name='JiveChannel',
+            name="JiveChannel",
             fields=[
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('name', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, unique=True)),
-                ('external_id', models.CharField(max_length=256, unique=True)),
-                ('signature', models.CharField(max_length=64, unique=True)),
-                ('expires_at', models.DateTimeField()),
-                ('active', models.BooleanField(default=True)),
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                (
+                    "name",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, unique=True
+                    ),
+                ),
+                ("external_id", models.CharField(max_length=256, unique=True)),
+                ("signature", models.CharField(max_length=64, unique=True)),
+                ("expires_at", models.DateTimeField()),
+                ("active", models.BooleanField(default=True)),
             ],
         ),
         migrations.CreateModel(
-            name='JiveSession',
+            name="JiveSession",
             fields=[
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('url', models.URLField()),
-                ('channel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='jive_integration.jivechannel')),
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("url", models.URLField()),
+                (
+                    "channel",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="jive_integration.jivechannel",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='JiveLine',
+            name="JiveLine",
             fields=[
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('source_jive_id', models.CharField(max_length=64, unique=True)),
-                ('source_organization_jive_id', models.CharField(max_length=64, unique=True)),
-                ('session', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jive_integration.jivesession')),
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("source_jive_id", models.CharField(max_length=64, unique=True)),
+                (
+                    "source_organization_jive_id",
+                    models.CharField(max_length=64, unique=True),
+                ),
+                (
+                    "session",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="jive_integration.jivesession",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='JiveConnection',
+            name="JiveConnection",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, db_index=True)),
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('refresh_token', models.TextField(blank=True)),
-                ('last_sync', models.DateTimeField(default='0001-01-01T00:00:00')),
-                ('active', models.BooleanField(default=True, null=True)),
-                ('created_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='jiveconnection_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
-                ('modified_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='jiveconnection_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
-                ('practice_telecom', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.practicetelecom')),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("modified_at", models.DateTimeField(auto_now=True, db_index=True)),
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("refresh_token", models.TextField(blank=True)),
+                ("last_sync", models.DateTimeField(default="0001-01-01T00:00:00")),
+                ("active", models.BooleanField(default=True, null=True)),
+                (
+                    "created_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="jiveconnection_created",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
+                (
+                    "modified_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="jiveconnection_modified",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
+                (
+                    "practice_telecom",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="core.practicetelecom",
+                    ),
+                ),
             ],
             options={
-                'get_latest_by': 'modified_at',
-                'abstract': False,
+                "get_latest_by": "modified_at",
+                "abstract": False,
             },
         ),
         migrations.AddField(
-            model_name='jivechannel',
-            name='connection',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='jive_integration.jiveconnection'),
+            model_name="jivechannel",
+            name="connection",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="jive_integration.jiveconnection",
+            ),
         ),
     ]

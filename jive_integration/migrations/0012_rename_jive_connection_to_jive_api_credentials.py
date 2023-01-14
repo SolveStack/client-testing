@@ -11,10 +11,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0021_auto_20221114_2028'),
-        ('jive_integration', '0011_audit_trail_models'),
+        ("core", "0021_auto_20221114_2028"),
+        ("jive_integration", "0011_audit_trail_models"),
     ]
 
     operations = [
-        migrations.RenameModel('JiveConnection', 'JiveAPICredentials'),
+        migrations.RenameModel("JiveConnection", "JiveAPICredentials"),
     ]

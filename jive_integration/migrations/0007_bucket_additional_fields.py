@@ -11,38 +11,56 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('jive_integration', '0006_jiveawsrecordingbucket'),
+        ("jive_integration", "0006_jiveawsrecordingbucket"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='jiveawsrecordingbucket',
-            options={'get_latest_by': 'modified_at'},
+            name="jiveawsrecordingbucket",
+            options={"get_latest_by": "modified_at"},
         ),
         migrations.AddField(
-            model_name='jiveawsrecordingbucket',
-            name='bucket_name',
+            model_name="jiveawsrecordingbucket",
+            name="bucket_name",
             field=models.CharField(blank=True, max_length=63, unique=True),
         ),
         migrations.AddField(
-            model_name='jiveawsrecordingbucket',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, db_index=True, default=django.utils.timezone.now),
+            model_name="jiveawsrecordingbucket",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True, db_index=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='jiveawsrecordingbucket',
-            name='created_by',
-            field=django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='jiveawsrecordingbucket_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned'),
+            model_name="jiveawsrecordingbucket",
+            name="created_by",
+            field=django_userforeignkey.models.fields.UserForeignKey(
+                blank=True,
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="jiveawsrecordingbucket_created",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="The user that is automatically assigned",
+            ),
         ),
         migrations.AddField(
-            model_name='jiveawsrecordingbucket',
-            name='modified_at',
+            model_name="jiveawsrecordingbucket",
+            name="modified_at",
             field=models.DateTimeField(auto_now=True, db_index=True),
         ),
         migrations.AddField(
-            model_name='jiveawsrecordingbucket',
-            name='modified_by',
-            field=django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='jiveawsrecordingbucket_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned'),
+            model_name="jiveawsrecordingbucket",
+            name="modified_by",
+            field=django_userforeignkey.models.fields.UserForeignKey(
+                blank=True,
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="jiveawsrecordingbucket_modified",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="The user that is automatically assigned",
+            ),
         ),
     ]

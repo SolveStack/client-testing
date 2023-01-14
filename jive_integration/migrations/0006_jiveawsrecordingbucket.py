@@ -8,18 +8,35 @@ import django_extensions.db.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jive_integration', '0005_relate_jive_channel_to_extracts'),
+        ("jive_integration", "0005_relate_jive_channel_to_extracts"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='JiveAWSRecordingBucket',
+            name="JiveAWSRecordingBucket",
             fields=[
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('access_key_id', models.CharField(blank=True, max_length=128, unique=True)),
-                ('username', models.CharField(blank=True, max_length=64, unique=True)),
-                ('policy_arn', models.CharField(blank=True, max_length=2048, unique=True)),
-                ('connection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='jive_integration.jiveconnection')),
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                (
+                    "access_key_id",
+                    models.CharField(blank=True, max_length=128, unique=True),
+                ),
+                ("username", models.CharField(blank=True, max_length=64, unique=True)),
+                (
+                    "policy_arn",
+                    models.CharField(blank=True, max_length=2048, unique=True),
+                ),
+                (
+                    "connection",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="jive_integration.jiveconnection",
+                    ),
+                ),
             ],
         ),
     ]

@@ -32,7 +32,9 @@ class APIClient:
 
     def _login(self):
         payload = {"email": self.email, "password": "password"}
-        response = self._session.request("POST", f"{self._url}/api/login/", json=payload)
+        response = self._session.request(
+            "POST", f"{self._url}/api/login/", json=payload
+        )
         response.raise_for_status()
         self._is_logged_in = True
 
@@ -52,7 +54,9 @@ class APIClient:
         return self.request("DELETE", path, **kwargs)
 
     def request(self, method, path, **kwargs):
-        return self._session.request(method, f"{self._url}{path}", headers=self._headers, **kwargs)
+        return self._session.request(
+            method, f"{self._url}{path}", headers=self._headers, **kwargs
+        )
 
     def raw_request(self, method, path, **kwargs):
         return requests.request(method, f"{self._url}{path}", **kwargs)
